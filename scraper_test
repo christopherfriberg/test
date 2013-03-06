@@ -1,0 +1,48 @@
+#!/usr/bin/ruby
+
+require 'open-uri'
+require 'nokogiri'
+require 'csv'
+
+@array_of_asins = []
+@asin_with_price = {} # {asin => price}
+
+# load asins from file into array
+#
+CSV.foreach("/Users/Meadow/RubyTest/products_shorter.csv", :headers => true) do |row|
+  @array_of_asins << row["asin"]
+end
+
+# test to see if asins properly read into in csv
+#
+#@array_of_asins.each do |r, index|
+#   puts "ASIN #{index}: #{r}"
+#end
+
+# create a hash {asin => price} from the given array of asins
+#
+@array_of_asins.each do |asin|
+	doc = Nokogiri::HTML(open("http://amzn.com/#{asin}"))
+	buybox_price = doc/"//*[@id=\"actualPriceValue\"]/b"
+	just_price = buybox_price.to_s.gsub("<b class=\"priceLarge\">","").gsub("</b>","")
+	@asin_with_price.merge!(asin => just_price)
+	puts "#{asin} #{just_price}"
+end
+
+@asin_with_price.each do |key, value|
+	puts "#{key} | #{value}"
+end
+
+CSV.open("export.csv", 'w') do |csv|
+	csv << [:asin, :sku]
+	@asin_with_price.each do |key, value|
+		csv << [key, value]
+	end
+end
+
+# testing on a single ASIN to get correct output
+#
+#doc = Nokogiri::HTML(open("http://amzn.com/#{@array_of_asins[0]}"))
+#buybox_price = doc/"//*[@id=\"actualPriceValue\"]/b"
+#just_price = buybox_price.to_s.gsub("<b class=\"priceLarge\">","").gsub("</b>","")
+#puts ("ASIN #{@array_of_asins[0]} has BuyBox price #{just_price}")
