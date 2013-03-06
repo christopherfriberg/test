@@ -7,7 +7,7 @@ require 'csv'
 @array_of_asins = []
 @asin_with_price = {} # {asin => price}
 
-# load asins from file into array
+# load asins from file into array, currently using local file
 #
 CSV.foreach("/Users/Meadow/RubyTest/products_shorter.csv", :headers => true) do |row|
   @array_of_asins << row["asin"]
